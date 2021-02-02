@@ -10,13 +10,21 @@
 #
 
 from chrisapp.base import ChrisApp
-
+import      pudb
+import      subprocess
+import      pfmisc
+from        pfmisc._colors      import  Colors
 
 Gstr_title = """
 
-Generate a title from 
-http://patorjk.com/software/taag/#p=display&f=Doom&t=multipass
-
+       _                        _ _   _                     
+      | |                      | | | (_)                    
+ _ __ | |______ _ __ ___  _   _| | |_ _ _ __   __ _ ___ ___ 
+| '_ \| |______| '_ ` _ \| | | | | __| | '_ \ / _` / __/ __|
+| |_) | |      | | | | | | |_| | | |_| | |_) | (_| \__ \__ \\
+| .__/|_|      |_| |_| |_|\__,_|_|\__|_| .__/ \__,_|___/___/
+| |                                    | |                  
+|_|                                    |_|                  
 """
 
 Gstr_synopsis = """
@@ -34,11 +42,15 @@ where necessary.)
     SYNOPSIS
 
         python multipass.py                                         \\
+            [--exec <appToRun>]                                         \\
+            [--specificArgs <pipeSeparatedSpecificArgs>]                \\
+            [--commonArgs <commonArgs>]                                 \\
             [-h] [--help]                                               \\
             [--json]                                                    \\
             [--man]                                                     \\
             [--meta]                                                    \\
             [--savejson <DIR>]                                          \\
+            [--noJobLogging]
             [-v <level>] [--verbosity <level>]                          \\
             [--version]                                                 \\
             <inputDir>                                                  \\
@@ -55,9 +67,33 @@ where necessary.)
 
     DESCRIPTION
 
-        `multipass.py` ...
+        `multipass` is a very simple script that runs a specific
+        pfdo_mgz2image on the underlying system shell multiple times over
+        the same <inputDir>. Each run, or phase, differs in the
+        set of <pipeSeparatedSpecificArgs> that is passed to the app.
+        In each phase, the <commonArgs> remains constant.
+        The main purpose of this plugin is to allow for one simple
+        mechanism of running slightly different flags over the
+        same <inputDir> space in several phases, and capturing
+        the multiple outputs in the <outputDir>. In the context of
+        a `ChRIS` feed tree, this has the effect of having one feed
+        thread contain effectively multiple runs of some <appToRun>
+        in one <outputDir>. In some cases this can be a useful
+        execution model.
 
     ARGS
+        [--exec <appToRun>]
+        A specific `app` to run in _multi-phase_ mode. This app must by
+        necessity exist within the  `multiphase` container. See the
+        `requirements.txt` for list of installed apps
+
+        [--specificArgs <pipeSeparatedSpecificArgs>]
+        This is a string list of per-phase specific arguments. Each
+        phase is separeted by the pipe `|` character.
+
+        [--commonArgs <commonArgs>]
+        This is a raw string of args, common to each phase call of the
+        <appToRun>.
 
         [-h] [--help]
         If specified, show help message and exit.
@@ -73,6 +109,9 @@ where necessary.)
         
         [--savejson <DIR>] 
         If specified, save json representation file to DIR and exit. 
+
+        [--noJobLogging]
+        Turns off per-job logging to file system.
         
         [-v <level>] [--verbosity <level>]
         Verbosity level for app. Not used currently.
@@ -117,13 +156,149 @@ class Multipass(ChrisApp):
         Define the CLI arguments accepted by this plugin app.
         Use self.add_argument to specify a new app argument.
         """
+        self.add_argument("-c", "--commonArgs",
+                            help        = "DS arguments to pass except inputdir and outputdir",
+                            type        = str,
+                            dest        = 'commonArgs',
+                            optional    = True,
+                            default     = "")
+
+        self.add_argument("-s", "--specificArgs",
+                            help        = "DS arguments to pass",
+                            type        = str,
+                            dest        = 'specificArgs',
+                            optional    = True,
+                            default     = "")
+
+        self.add_argument("-e", "--exec",
+                            help        = "DS app to run",
+                            type        = str,
+                            dest        = 'exec',
+                            optional    = True,
+                            default     = "pfdo_mgz2image")
+
+        self.add_argument("--noJobLogging",
+                            help        = "Turn off per-job logging to file system",
+                            type        = bool,
+                            dest        = 'noJobLogging',
+                            action      = 'store_true',
+                            optional    = True,
+                            default     = False)
+
+
+    def job_run(self, str_cmd):
+        """
+        Running some CLI process via python is cumbersome. The typical/easy
+        path of
+                            os.system(str_cmd)
+        is deprecated and prone to hidden complexity. The preferred
+        method is via subprocess, which has a cumbersome processing
+        syntax. Still, this method runs the `str_cmd` and returns the
+        stderr and stdout strings as well as a returncode.
+        Providing readtime output of both stdout and stderr seems
+        problematic. The approach here is to provide realtime
+        output on stdout and only provide stderr on process completion.
+        """
+        d_ret       : dict = {
+            'stdout':       "",
+            'stderr':       "",
+            'returncode':   0
+        }
+        str_stdoutLine  : str   = ""
+        str_stdout      : str   = ""
+
+        p = subprocess.Popen(
+                    str_cmd.split(),
+                    stdout      = subprocess.PIPE,
+                    stderr      = subprocess.PIPE,
+        )
+
+        # Realtime output on stdout
+        str_stdoutLine  = ""
+        str_stdout      = ""
+        while True:
+            stdout      = p.stdout.readline()
+            if p.poll() is not None:
+                break
+            if stdout:
+                str_stdoutLine = stdout.decode()
+                if int(self.args['verbosity']):
+                    print(str_stdoutLine, end = '')
+                str_stdout      += str_stdoutLine
+        d_ret['stdout']     = str_stdout
+        d_ret['stderr']     = p.stderr.read().decode()
+        d_ret['returncode'] = p.returncode
+        if int(self.args['verbosity']) and len(d_ret['stderr']):
+            print('\nstderr: \n%s' % d_ret['stderr'])
+        return d_ret
+
+    def job_stdwrite(self, d_job, str_outputDir, str_prefix = ""):
+        """
+        Capture the d_job entries to respective files.
+        """
+        if not self.args['noJobLogging']:
+            for key in d_job.keys():
+                with open(
+                    '%s/%s%s' % (str_outputDir, str_prefix, key), "w"
+                ) as f:
+                    f.write(str(d_job[key]))
+                    f.close()
+        return {
+            'status': True
+        }
 
     def run(self, options):
         """
         Define the code to be run by this plugin app.
         """
-        print(Gstr_title)
-        print('Version: %s' % self.get_version())
+
+        l_specificArg :     list    = []
+        str_cmd       :     str     = ""
+        pass_count    :     int     = 0
+
+        self.args           = vars(options)
+        self.__name__       = "multiphase"
+        self.dp             = pfmisc.debug(
+                                 verbosity   = int(self.args['verbosity']),
+                                 within      = self.__name__
+                             )
+
+        self.dp.qprint( Colors.CYAN + Gstr_title,
+                        level   = 1,
+                        syslog  = False)
+
+        self.dp.qprint( Colors.YELLOW + 'Version: %s' % self.get_version(),
+                        level   = 1,
+                        syslog  = False)
+
+        for k,v in self.args.items():
+            self.dp.qprint("%25s: %-40s" % (k, v),
+                            comms   = 'status',
+                            syslog  = False)
+        self.dp.qprint(" ", level   = 1, syslog = False)
+
+        l_specificArg   = options.specificArgs.split('|')
+        str_cmd         = ""
+
+        for str_specificArg in l_specificArg:
+            if options.exec == 'pfdo_mgz2image':
+                str_cmd = '%s -I %s -O %s %s %s' % \
+                          (
+                            options.exec,
+                            options.inputdir,
+                            options.outputdir,
+                            options.commonArgs,
+                            str_specificArg
+                        )
+            self.dp.qprint("Running %s..." % str_cmd)
+            # Run the job and provide realtime stdout
+            # and post-run stderr
+            self.job_stdwrite(
+                self.job_run(str_cmd), options.outputdir,
+                '%s-%d-' % (options.exec, pass_count)
+            )
+            pass_count += 1
+
 
     def show_man_page(self):
         """

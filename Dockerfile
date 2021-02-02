@@ -27,6 +27,7 @@ LABEL maintainer="FNNDSC/ArushiVyas <dev@babyMRI.org>"
 WORKDIR /usr/local/src
 
 COPY requirements.txt .
+COPY "FreeSurferColorLUT.txt" /usr/src
 RUN pip install -r requirements.txt
 
 COPY . .

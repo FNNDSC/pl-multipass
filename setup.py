@@ -6,12 +6,12 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.rst')) as f:
 
 setup(
     name             = 'multipass',
-    version          = '0.1',
+    version          = '1.0.2',
     description      = 'An app to make multiple passes or runs of a certain Python Utility with different args',
     long_description = readme,
     author           = 'FNNDSC/ArushiVyas',
     author_email     = 'dev@babyMRI.org',
-    url              = 'http://wiki',
+    url              = 'https://github.com/FNNDSC/pl-multipass',
     packages         = ['multipass'],
     install_requires = ['chrisapp'],
     test_suite       = 'nose.collector',
