@@ -11,11 +11,21 @@
 
 name: ci
 
-on: [push, pull_request, release]
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [ created ]
+
 
 jobs:
   test:
     runs-on: ubuntu-20.04
+    # testing is disabled
+    # delete the line below to enable testing
+    if: false
     steps:
       - uses: actions/checkout@v2
       - name: build
@@ -26,7 +36,6 @@ jobs:
   publish:
     if: github.event_name == 'push' || github.event_name == 'release'
     runs-on: ubuntu-20.04
-    needs: [test]
 
     # we want to both push the build to DockerHub, but also
     # keep a local copy so that we can run
