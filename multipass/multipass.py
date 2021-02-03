@@ -1,4 +1,4 @@
-#!/usr/bin/env python                                            
+#!/usr/bin/env python
 #
 # multipass ds ChRIS plugin app
 #
@@ -17,31 +17,25 @@ from        pfmisc._colors      import  Colors
 
 Gstr_title = """
 
-       _                        _ _   _                     
-      | |                      | | | (_)                    
- _ __ | |______ _ __ ___  _   _| | |_ _ _ __   __ _ ___ ___ 
+       _                        _ _   _
+      | |                      | | | (_)
+ _ __ | |______ _ __ ___  _   _| | |_ _ _ __   __ _ ___ ___
 | '_ \| |______| '_ ` _ \| | | | | __| | '_ \ / _` / __/ __|
 | |_) | |      | | | | | | |_| | | |_| | |_) | (_| \__ \__ \\
 | .__/|_|      |_| |_| |_|\__,_|_|\__|_| .__/ \__,_|___/___/
-| |                                    | |                  
-|_|                                    |_|                  
+| |                                    | |
+|_|                                    |_|
 """
 
 Gstr_synopsis = """
 
-(Edit this in-line help for app specifics. At a minimum, the 
-flags below are supported -- in the case of DS apps, both
-positional arguments <inputDir> and <outputDir>; for FS apps
-only <outputDir> -- and similarly for <in> <out> directories
-where necessary.)
-
     NAME
 
-       multipass.py 
+       multipass
 
     SYNOPSIS
 
-        python multipass.py                                         \\
+        multipass                                                       \\
             [--exec <appToRun>]                                         \\
             [--specificArgs <pipeSeparatedSpecificArgs>]                \\
             [--commonArgs <commonArgs>]                                 \\
@@ -50,28 +44,30 @@ where necessary.)
             [--man]                                                     \\
             [--meta]                                                    \\
             [--savejson <DIR>]                                          \\
-            [--noJobLogging]
+            [--noJobLogging]                                            \\
             [-v <level>] [--verbosity <level>]                          \\
             [--version]                                                 \\
             <inputDir>                                                  \\
-            <outputDir> 
+            <outputDir>
 
     BRIEF EXAMPLE
 
         * Bare bones execution
 
-            docker run --rm -u $(id -u)                             \
-                -v $(pwd)/in:/incoming -v $(pwd)/out:/outgoing      \
-                fnndsc/pl-multipass multipass                        \
+            docker run --rm -u $(id -u)                                 \\
+                -v $(pwd)/in:/incoming -v $(pwd)/out:/outgoing          \\
+                fnndsc/pl-multipass multipass                           \\
                 /incoming /outgoing
 
     DESCRIPTION
 
         `multipass` is a very simple script that runs a specific
-        pfdo_mgz2image on the underlying system shell multiple times over
+        <appToRun> on the underlying system shell multiple times over
         the same <inputDir>. Each run, or phase, differs in the
         set of <pipeSeparatedSpecificArgs> that is passed to the app.
+
         In each phase, the <commonArgs> remains constant.
+
         The main purpose of this plugin is to allow for one simple
         mechanism of running slightly different flags over the
         same <inputDir> space in several phases, and capturing
@@ -82,6 +78,7 @@ where necessary.)
         execution model.
 
     ARGS
+
         [--exec <appToRun>]
         A specific `app` to run in _multi-phase_ mode. This app must by
         necessity exist within the  `multiphase` container. See the
@@ -97,27 +94,27 @@ where necessary.)
 
         [-h] [--help]
         If specified, show help message and exit.
-        
+
         [--json]
         If specified, show json representation of app and exit.
-        
+
         [--man]
         If specified, print (this) man page and exit.
 
         [--meta]
         If specified, print plugin meta data and exit.
-        
-        [--savejson <DIR>] 
-        If specified, save json representation file to DIR and exit. 
+
+        [--savejson <DIR>]
+        If specified, save json representation file to DIR and exit.
 
         [--noJobLogging]
         Turns off per-job logging to file system.
-        
+
         [-v <level>] [--verbosity <level>]
         Verbosity level for app. Not used currently.
-        
+
         [--version]
-        If specified, print version number and exit. 
+        If specified, print version number and exit.
 """
 
 
@@ -190,7 +187,9 @@ class Multipass(ChrisApp):
         """
         Running some CLI process via python is cumbersome. The typical/easy
         path of
+
                             os.system(str_cmd)
+
         is deprecated and prone to hidden complexity. The preferred
         method is via subprocess, which has a cumbersome processing
         syntax. Still, this method runs the `str_cmd` and returns the
@@ -257,7 +256,7 @@ class Multipass(ChrisApp):
         pass_count    :     int     = 0
 
         self.args           = vars(options)
-        self.__name__       = "multiphase"
+        self.__name__       = "multipass"
         self.dp             = pfmisc.debug(
                                  verbosity   = int(self.args['verbosity']),
                                  within      = self.__name__
