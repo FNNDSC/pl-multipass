@@ -108,12 +108,13 @@ jobs:
 
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v2
-        continue-on-error: true
+        continue-on-error: true  # optional step
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           short-description: "A ChRIS plugin app that can make multiple passes or runs of a certain Python Utility."
           readme-filepath: ./README.rst
+          repository: fnndsc/pl-multipass  # repo name must be all lower case
 
       - name: Upload to ChRIS Store
         if: "!endsWith(steps.determine.outputs.tag, ':latest')"
