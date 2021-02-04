@@ -158,14 +158,14 @@ class Multipass(ChrisApp):
         Define the CLI arguments accepted by this plugin app.
         Use self.add_argument to specify a new app argument.
         """
-        self.add_argument("-c", "--commonArgs",
+        self.add_argument("--commonArgs",
                             help        = "Arguments common to each pass",
                             type        = str,
                             dest        = 'commonArgs',
                             optional    = True,
                             default     = "")
 
-        self.add_argument("-s", "--specificArgs",
+        self.add_argument("--specificArgs",
                             help        = "Compound string of pass specific args",
                             type        = str,
                             dest        = 'specificArgs',
