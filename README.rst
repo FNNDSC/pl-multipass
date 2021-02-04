@@ -33,7 +33,8 @@ Usage
 
     multipass
             [--exec <appToRun>]                                         \
-            [--specificArgs <pipeSeparatedSpecificArgs>]                \
+            [--specificArgs <specificArgs>]                             \
+            [--splitExpr <splitOn>]                                     \
             [--commonArgs <commonArgs>]                                 \
             [-h] [--help]                                               \
             [--json]                                                    \
@@ -57,9 +58,13 @@ Arguments
         necessity exist within the  ``multiphase`` container. See the
         ``requirements.txt`` for list of installed apps
 
-        [--specificArgs <pipeSeparatedSpecificArgs>]
+        [--specificArgs <specificArgs>]
         This is a string list of per-phase specific arguments. Each
-        phase is separeted by the pipe ``|`` character.
+        phase is separeted by the pipe `|` character.
+
+        [--splitExpr <splitOn>]
+        The expression on which to split the <specificArgs> string.
+        Default is '++'.
 
         [--commonArgs <commonArgs>]
         This is a raw string of args, common to each phase call of the

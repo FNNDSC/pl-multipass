@@ -37,7 +37,8 @@ Gstr_synopsis = """
 
         multipass                                                       \\
             [--exec <appToRun>]                                         \\
-            [--specificArgs <pipeSeparatedSpecificArgs>]                \\
+            [--specificArgs <specificArgs>]                             \\
+            [--splitExpr <splitOn>]                                     \\
             [--commonArgs <commonArgs>]                                 \\
             [-h] [--help]                                               \\
             [--json]                                                    \\
@@ -84,9 +85,13 @@ Gstr_synopsis = """
         necessity exist within the  `multiphase` container. See the
         `requirements.txt` for list of installed apps
 
-        [--specificArgs <pipeSeparatedSpecificArgs>]
+        [--specificArgs <specificArgs>]
         This is a string list of per-phase specific arguments. Each
         phase is separeted by the pipe `|` character.
+
+        [--splitExpr <splitOn>]
+        The expression on which to split the <specificArgs> string.
+        Default is '++'.
 
         [--commonArgs <commonArgs>]
         This is a raw string of args, common to each phase call of the
@@ -154,18 +159,26 @@ class Multipass(ChrisApp):
         Use self.add_argument to specify a new app argument.
         """
         self.add_argument("-c", "--commonArgs",
-                            help        = "DS arguments to pass except inputdir and outputdir",
+                            help        = "Arguments common to each pass",
                             type        = str,
                             dest        = 'commonArgs',
                             optional    = True,
                             default     = "")
 
         self.add_argument("-s", "--specificArgs",
-                            help        = "DS arguments to pass",
+                            help        = "Compound string of pass specific args",
                             type        = str,
                             dest        = 'specificArgs',
                             optional    = True,
                             default     = "")
+
+        self.add_argument("--splitExpr",
+                            help        = "Expression on which to split the <specificArgs>",
+                            type        = str,
+                            dest        = 'splitExpr',
+                            optional    = True,
+                            default     = "++")
+
 
         self.add_argument("-e", "--exec",
                             help        = "DS app to run",
@@ -276,7 +289,7 @@ class Multipass(ChrisApp):
                             syslog  = False)
         self.dp.qprint(" ", level   = 1, syslog = False)
 
-        l_specificArg   = options.specificArgs.split('|')
+        l_specificArg   = options.specificArgs.split(options.splitExpr)
         str_cmd         = ""
 
         for str_specificArg in l_specificArg:
