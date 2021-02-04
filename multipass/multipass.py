@@ -9,6 +9,8 @@
 #                        dev@babyMRI.org
 #
 
+import      os
+
 from chrisapp.base import ChrisApp
 import      pudb
 import      subprocess
@@ -214,6 +216,8 @@ class Multipass(ChrisApp):
         d_ret       : dict = {
             'stdout':       "",
             'stderr':       "",
+            'cmd':          "",
+            'cwd':          "",
             'returncode':   0
         }
         str_stdoutLine  : str   = ""
@@ -237,6 +241,8 @@ class Multipass(ChrisApp):
                 if int(self.args['verbosity']):
                     print(str_stdoutLine, end = '')
                 str_stdout      += str_stdoutLine
+        d_ret['cmd']        = str_cmd
+        d_ret['cwd']        = os.getcwd()
         d_ret['stdout']     = str_stdout
         d_ret['stderr']     = p.stderr.read().decode()
         d_ret['returncode'] = p.returncode
