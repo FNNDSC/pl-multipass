@@ -124,11 +124,30 @@ Build the Docker container:
 
     docker build -t local/pl-multipass .
 
-Examples
---------
 
-Put some examples here!
+Debug
+-----
 
+To debug the containerized version of this plugin, simply volume map the source directories of the repo into the relevant locations of the container image:
+
+.. code:: bash
+
+    docker run -ti --rm -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw        \
+        -v $PWD/multipass:/usr/local/lib/python3.9/site-packages/multipass:ro   \
+        fnndsc/pl-multipass multipass /incoming /outgoing
+
+To enter the container:
+
+.. code:: bash
+
+    docker run -ti --rm -v $PWD/in:/incoming:ro -v $PWD/out:/outgoing:rw        \
+        -v $PWD/multipass:/usr/local/lib/python3.9/site-packages/multipass:ro   \
+        --entrypoint /bin/bash fnndsc/pl-multipass
+
+Remember to use the ``-ti`` flag for interactivity! Volume mapping the original host source directory in the above example is optional.
+
+
+*30*
 
 .. image:: https://raw.githubusercontent.com/FNNDSC/cookiecutter-chrisapp/master/doc/assets/badge/light.png
     :target: https://chrisstore.co
