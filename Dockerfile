@@ -8,9 +8,10 @@
 #
 #   docker build -t local/pl-multipass .
 #
-# In the case of a proxy (located at 192.168.13.14:3128), do:
+# In the case of a proxy (located at say http://proxy.tch.harvard.edu:3128), do:
 #
-#    docker build --build-arg http_proxy=http://192.168.13.14:3128 --build-arg UID=$UID -t local/pl-multipass .
+#   PROXY=http://proxy.tch.harvard.edu:3128
+#   docker build --build-arg http_proxy=${PROXY} --build-arg UID=$UID -t local/pl-multipass .
 #
 # To run an interactive shell inside this container, do:
 #
@@ -21,7 +22,7 @@
 #   docker run -ti -e HOST_IP=$(ip route | grep -v docker | awk '{if(NF==11) print $9}') --entrypoint /bin/bash local/pl-multipass
 #
 
-FROM python:3.9.1-buster
+FROM python:3.9.1-slim-buster
 LABEL maintainer="FNNDSC/ArushiVyas <dev@babyMRI.org>"
 
 WORKDIR /usr/local/src
