@@ -32,7 +32,7 @@ jobs:
       - name: build
         run: docker build -t "${GITHUB_REPOSITORY,,}" .
       - name: nose tests
-        run: docker run -w /usr/local/src --entrypoint /bin/sh "${GITHUB_REPOSITORY,,}" -c 'pip install nose && nosetests'
+        run: docker run "${GITHUB_REPOSITORY,,}" nosetests
 
   publish:
     if: github.event_name == 'push' || github.event_name == 'release'
@@ -78,6 +78,7 @@ jobs:
       - uses: docker/setup-buildx-action@v1
         with:
           driver-opts: network=host
+      # save some time during rebuilds
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
@@ -107,13 +108,27 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Get plugin meta
+        id: pluginmeta
+        run: |
+          repo=${{ steps.determine.outputs.repo }}
+          dock_image=${{ steps.determine.outputs.dock_image }}
+          docker pull localhost:5000/$dock_image
+          docker tag localhost:5000/$dock_image $dock_image
+          script=$(docker inspect --format '{{ (index .Config.Cmd 0) }}' $dock_image)
+          json="$(docker run --rm $dock_image $script --json)"
+          jq <<< "$json"  # pretty print in log
+
+          echo "::set-output name=json::$json"
+          echo "::set-output name=title::$(jq -r '.title' <<< "$json")"
+
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v2
-        continue-on-error: true  # optional step
+        continue-on-error: true  # it is not crucial that this works
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          short-description: "A ChRIS plugin app that can make multiple passes or runs of a certain Python Utility."
+          short-description: ${{ steps.pluginmeta.outputs.title }}
           readme-filepath: ./README.rst
           repository: ${{ steps.determine.outputs.repo }}
 
@@ -122,12 +137,8 @@ jobs:
         run: |
           repo=${{ steps.determine.outputs.repo }}
           dock_image=${{ steps.determine.outputs.dock_image }}
-          docker pull localhost:5000/$dock_image
-          docker tag localhost:5000/$dock_image $dock_image
-          docker rmi localhost:5000/$dock_image
-          script=$(docker inspect --format '{{ (index .Config.Cmd 0) }}' $dock_image)
           descriptor_file=$(mktemp --suffix .json)
-          docker run --rm $dock_image $script --json > $descriptor_file
+          cat > $descriptor_file <<< '${{ steps.pluginmeta.outputs.json }}'
           res=$(
             curl -s -u "${{ secrets.CHRIS_STORE_USER }}" "https://chrisstore.co/api/v1/plugins/" \
               -F "name=$(sed 's/^.*\///' <<< $repo)" \
@@ -141,8 +152,7 @@ jobs:
             echo $href
             echo "::set-output name=pluginurl::$href"
           else
-            echo "Failed to upload to ChRIS Store"
+            echo "::error ::Failed upload to ChRIS Store"
             echo "$res"
             exit $success
           fi
-
