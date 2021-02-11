@@ -42,7 +42,7 @@ Usage
             [--meta]                                                    \
             [--savejson <DIR>]                                          \
             [--noJobLogging]                                            \
-            [-v <level>] [--verbosity <level>]                          \
+            [--verbose <level>]                                         \
             [--version]                                                 \
             <inputDir>                                                  \
             <outputDir>
@@ -88,8 +88,8 @@ Arguments
         [--noJobLogging]
         Turns off per-job logging to file system.
 
-        [-v <level>] [--verbosity <level>]
-        Verbosity level for app. Not used currently.
+        [--verbose <level>]
+        Verbosity level for app: 0->silent, 5->talkative.
 
         [--version]
         If specified, print version number and exit.

@@ -48,7 +48,7 @@ Gstr_synopsis = """
             [--meta]                                                    \\
             [--savejson <DIR>]                                          \\
             [--noJobLogging]                                            \\
-            [-v <level>] [--verbosity <level>]                          \\
+            [--verbose <level>]                                         \\
             [--version]                                                 \\
             <inputDir>                                                  \\
             <outputDir>
@@ -117,8 +117,8 @@ Gstr_synopsis = """
         [--noJobLogging]
         Turns off per-job logging to file system.
 
-        [-v <level>] [--verbosity <level>]
-        Verbosity level for app. Not used currently.
+        [--verbose <level>]
+        Verbosity level for app: 0->silent, 5->talkative.
 
         [--version]
         If specified, print version number and exit.
@@ -181,7 +181,6 @@ class Multipass(ChrisApp):
                             optional    = True,
                             default     = "++")
 
-
         self.add_argument("-e", "--exec",
                             help        = "DS app to run",
                             type        = str,
@@ -196,6 +195,13 @@ class Multipass(ChrisApp):
                             action      = 'store_true',
                             optional    = True,
                             default     = False)
+
+        self.add_argument("--verbose",
+                            type        = str,
+                            optional    = True,
+                            help        = "verbosity level for app",
+                            dest        = 'verbose',
+                            default     = "1")
 
 
     def job_run(self, str_cmd):
@@ -274,6 +280,7 @@ class Multipass(ChrisApp):
         str_cmd       :     str     = ""
         pass_count    :     int     = 0
 
+        options.verbosity   = options.verbose
         self.args           = vars(options)
         self.__name__       = "multipass"
         self.dp             = pfmisc.debug(
@@ -282,12 +289,12 @@ class Multipass(ChrisApp):
                              )
 
         self.dp.qprint( Colors.CYAN + Gstr_title,
-                        level   = 1,
-                        syslog  = False)
+                            level   = 1,
+                            syslog  = False)
 
         self.dp.qprint( Colors.YELLOW + 'Version: %s' % self.get_version(),
-                        level   = 1,
-                        syslog  = False)
+                            level   = 1,
+                            syslog  = False)
 
         for k,v in self.args.items():
             self.dp.qprint("%25s: %-40s" % (k, v),
