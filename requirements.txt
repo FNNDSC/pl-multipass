@@ -1,4 +1,4 @@
-chrisapp~=2.1.0
+chrisapp~=2.4.0
 pudb
 pfdo
 pfdo_mgz2image
