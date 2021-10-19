@@ -6,7 +6,7 @@ with open(path.join(path.dirname(path.abspath(__file__)), 'README.rst')) as f:
 
 setup(
     name             = 'multipass',
-    version          = '1.2.12',
+    version          = '1.3.0',
     description      = 'An app to make multiple passes or runs of a certain Python Utility with different args',
     long_description = readme,
     author           = 'FNNDSC/ArushiVyas',
