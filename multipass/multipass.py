@@ -307,7 +307,7 @@ class Multipass(ChrisApp):
 
         for str_specificArg in l_specificArg:
             if options.exec == 'pfdo_mgz2image':
-                str_cmd = '%s -I %s -O %s %s %s' % \
+                str_cmd = '%s --inputDir %s --outputDir %s %s %s' % \
                           (
                             options.exec,
                             options.inputdir,
