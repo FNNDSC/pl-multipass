@@ -1,7 +1,7 @@
 chrisapp~=2.4.0
 pudb
 pfdo
-pfdo_mgz2image==2.1.4
+pfdo_mgz2image==2.1.5
 faker
 pftree
 scikit_image

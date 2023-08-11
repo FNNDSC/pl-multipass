@@ -60,7 +60,7 @@ Arguments
 
         [--specificArgs <specificArgs>]
         This is a string list of per-phase specific arguments. Each
-        phase is separeted by the pipe `|` character.
+        phase is separated by <splitOn> expression.
 
         [--splitExpr <splitOn>]
         The expression on which to split the <specificArgs> string.
