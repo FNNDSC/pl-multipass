@@ -33,6 +33,6 @@ RUN pip install -r requirements.txt
 
 COPY . .
 RUN pip install .
-
+EXPOSE 7900
 WORKDIR /usr/local/bin
 CMD ["multipass", "--help"]
